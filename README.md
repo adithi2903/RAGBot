@@ -1,63 +1,42 @@
-# 🇮🇳 Indian Tax Law RAG Chatbot
+# Indian Tax Law RAG Chatbot
 
-A Retrieval-Augmented Generation (RAG) chatbot that answers questions about Indian
-income-tax law. It retrieves from **official tax PDFs** and answers using **NVIDIA
-Nemotron**, with every answer backed by **citations** (document, section, page) so
-responses are verifiable and grounded — not made up.
+A chatbot that answers questions about Indian income-tax law. Instead of letting an
+LLM make things up, it retrieves the relevant passages from the actual Income-tax Act
+and answers **only from those sources, with citations** (document, section, page).
 
-Built as an internship project to demonstrate a practical, citation-native RAG system.
+Built as an internship project to learn how to build a real, grounded RAG system.
 
-## ✨ Features
-- Answers grounded only in official source documents (no hallucinated tax advice)
-- Inline **citations** with document name, section, and page number
-- Distinguishes the **current law (Income-tax Act, 2025)** from the **previous law (Act, 1961)**
-- Clean chat interface (Gradio)
-- Says "not found in the provided documents" instead of guessing
+## What it does
+- Answers income-tax questions using the **Income-tax Act, 1961** and **Income-tax Rules, 1962**
+- Cites the exact document, section, and page for every answer
+- Shows a ✅ / ⚠️ badge that verifies the cited sections are actually in the sources
+- Says "I could not find this" instead of guessing when the answer isn't in the documents
 
-## 🏗️ How it works
-```
-PDFs → chunk (with metadata) → embeddings → vector DB (Chroma)
-                                                     │
-question → embed → retrieve top chunks → (rerank) → Nemotron answers + cites sources
-```
+## How it works
+1. The PDFs are split into chunks and stored in a vector database (Chroma).
+2. For each question it does **hybrid retrieval** — keyword search (BM25) + meaning search
+   (embeddings), combined and then re-ranked — to find the most relevant passages.
+3. If the question names a section (e.g. 80C), it specifically finds where that provision
+   begins, not just where it's mentioned.
+4. **NVIDIA Nemotron** writes the answer using only those passages and cites them.
+5. An audit step checks every cited section really appears in the retrieved text.
 
-## 🧰 Tech stack
-| Part | Tool |
-|------|------|
-| LLM (answers) | NVIDIA Nemotron (via NVIDIA API) |
-| PDF reading | pypdf |
-| Embeddings | sentence-transformers |
-| Vector database | Chroma |
-| UI | Gradio |
+## Tech used
+NVIDIA Nemotron (LLM) · sentence-transformers (embeddings) · BM25 (keyword search) ·
+cross-encoder (re-ranking) · Chroma (vector DB) · pypdf · Gradio (chat UI)
 
-## 📄 Documents used
-Official sources (download separately — not committed to the repo):
-- Income-tax Act, 1961 — https://www.indiacode.nic.in/handle/123456789/2435
-- Income-tax Act, 2025 — https://www.incometax.gov.in/iec/foportal/newdownloads/income-tax-act-2025
-- Income-tax Rules, 1962, latest Finance Act, and CBDT circulars — https://www.incometaxindia.gov.in
+## Results
+Evaluated on a 20-question test set with known correct sections:
+- Retrieval hit-rate: ~70%
+- Citation accuracy: ~80% (up from a 45% baseline as I improved retrieval)
 
-PDFs are named with the convention `DocType_Year_Section_Topic.pdf` (e.g.
-`ITAct_1961_Sec80C_Deductions.pdf`) so the filename becomes searchable metadata.
+Works best on common deductions and section-named questions; some procedural sections
+(filing / PAN / penalties) are weaker — documented honestly rather than hidden.
 
-## 🚀 Setup
-```bash
-pip install -r requirements.txt
-export NVIDIA_API_KEY="nvapi-..."   # get a free key at https://build.nvidia.com
-```
-1. Download the PDFs above, rename them, and put them in a `tax_pdfs/` folder.
-2. Open `Tax_RAG_Chatbot.ipynb` and run the cells top to bottom.
-3. The last cell launches the chat UI.
+## What I learned
+Most of the work was not wiring the pieces together but **measuring** the system and
+fixing where retrieval actually broke — cross-references drowning the right provision,
+the table of contents hijacking results, and two laws with conflicting section numbers.
+Building an evaluation harness is what made those fixes possible.
 
-## 📊 Results
-- Tested on common income-tax queries (deductions, filing dates, definitions).
-- Answers cite the exact source document, section, and page.
-- _(Add your own example screenshots in `screenshots/`.)_
-
-## 🔭 Future work
-Production scaling path: hybrid retrieval (BM25 + dense), cross-encoder reranking,
-a post-answer citation-audit layer, temporal/version routing, and a FastAPI +
-vector-DB service for concurrent users.
-
-## ⚠️ Disclaimer
-This is an educational project and not professional tax or legal advice. Always
-verify against the official source documents (which the bot links to).
+*Educational project — not professional tax advice.*
