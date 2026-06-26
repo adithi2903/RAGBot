@@ -5,7 +5,7 @@ secrets.*
 
 # --- data / generated (too big or local) ---
 tax_pdfs/
-chroma/
+chroma_db/
 *.sqlite3
 *.pdf
 
@@ -19,3 +19,14 @@ venv/
 # --- os ---
 .DS_Store
 Thumbs.db
+# scratch/debug
+peek*.py
+diag.py
+debug_misses.py
+~$*
+
+chroma_db/
+peek*.py
+diag.py
+debug_misses.py
+~$*
