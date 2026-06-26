@@ -1,0 +1,21 @@
+# --- secrets: NEVER commit your API key ---
+.env
+*.key
+secrets.*
+
+# --- data / generated (too big or local) ---
+tax_pdfs/
+chroma/
+*.sqlite3
+*.pdf
+
+# --- python ---
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+venv/
+.venv/
+
+# --- os ---
+.DS_Store
+Thumbs.db
